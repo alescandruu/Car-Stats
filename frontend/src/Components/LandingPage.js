@@ -1,12 +1,15 @@
 import React, { useContext } from 'react';
 import BasicButton from './BasicButton';
 import { Context } from './Context';
+import axios from 'axios';
 
 const LandingPage = () => {
   const { updateData } = useContext(Context);
 
     const onClick = () => {
-        updateData(1);
+      axios.get('http://localhost:8000/api/data')
+      .then(response => updateData(response.data))
+      .catch(error => console.error(error));
     }
 
   return (

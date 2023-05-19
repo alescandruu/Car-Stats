@@ -7,7 +7,7 @@ const LandingPage = () => {
   const { updateData } = useContext(Context);
 
     const onClick = () => {
-      axios.get('http://localhost:8000/api/data')
+      axios.get('http://localhost:8000/server1/data')
       .then(response => updateData(response.data))
       .catch(error => console.error(error));
     }

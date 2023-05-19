@@ -35,6 +35,10 @@ code {
   width: 90%;
 }
 
+.dataManipulationBody {
+  width: 20%;
+}
+
 .TableContainer {
   width: 50%;
   display: flex;
@@ -51,4 +55,26 @@ code {
   flex-direction: row;
   width: 100%;
   justify-content: space-around;
+}
+
+.PostFormBody {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.PostFormBody div {
+  width: 80%;
+}
+
+.InputContainer {
+  display: flex;
+  align-items: center;
+  gap: 5%;
+}
+
+.deleteForm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }

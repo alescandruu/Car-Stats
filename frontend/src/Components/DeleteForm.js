@@ -8,6 +8,18 @@ const DeleteForm = () => {
   const { updateData } = useContext(Context);
 
   const onClick = () => {
+    axios
+      .delete(`http://localhost:8000/server1/data/${date}`)
+      .then(() => {
+        setDate('');
+        axios
+          .get('http://localhost:8000/server1/data')
+          .then((response) => updateData(response.data))
+          .catch((error) => console.log(error));
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   };
 
   return (

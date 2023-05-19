@@ -17,11 +17,34 @@ let data = [
 app.get('/server1/data', (req, res) => {
   axios.get('http://localhost:4000/values')
   .then(response => res.json(response.data))
+  .catch((error) => 
+    res.status(500).json({ error: 'Failed to get data' })
+  );
 });
 
 app.post('/server1/data', (req, res) => {
   axios.post('http://localhost:4000/values', req.body)
-  .then(response => res.json(response.data));
+  .then(response => res.json(response.data))
+  .catch((error) => 
+    res.status(500).json({ error: 'Failed to add data' })
+  );
+});
+
+app.delete('/server1/data/:date', (req, res) => {
+  const { date } = req.params;
+  axios.get('http://localhost:4000/values')
+  .then((response) => {
+    const dataToDelete = response.data.filter(item => item.date === date);
+
+    dataToDelete.map(item =>
+      axios.delete(`http://localhost:4000/values/${item.id}`)
+    );
+  })
+  .then(() => res.json({ message: 'Data deleted successfully' }))
+  .catch ((error) => {
+    console.error(error);
+    res.status(500).send('Error deleting data');
+  })
 });
 
 app.get('/web-scraping/data', (req, res) => {

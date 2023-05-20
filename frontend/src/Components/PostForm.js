@@ -4,16 +4,34 @@ import { Context } from './Context';
 import axios from 'axios';
 
 const PostForm = () => {
-  const [date, setDate] = useState('');
-  const [value, setValue] = useState('');
-  const { updateData } = useContext(Context);
+  const [car, setCar] = useState('');
+  const [speed, setSpeed] = useState('');
+  const { data , updateData } = useContext(Context);
+  const [firstSubmit, setFirstSubmit] = useState(true);
 
-  const onClick = () => {
+  const firstOnClick = () => {
+    setFirstSubmit(false);
+    const newData = data;
+    newData.push({'marcaModel': car, 'vitezaMaxima': speed});
     axios
-      .post('http://localhost:8000/server1/data', { date, value })
+      .post('http://localhost:8000/server1/initialData', newData)
       .then(() => {
-        setDate('');
-        setValue('');
+        setCar('');
+        setSpeed('');
+        axios
+          .get('http://localhost:8000/server1/data')
+          .then((response) => updateData(response.data))
+          .catch((error) => console.log(error));
+      })
+      .catch((error) => console.log(error));
+  }
+
+  const secondOnClick = () => {
+    axios
+      .post('http://localhost:8000/server1/data', ({'marcaModel': car, 'vitezaMaxima': speed}))
+      .then(() => {
+        setCar('');
+        setSpeed('');
         axios
           .get('http://localhost:8000/server1/data')
           .then((response) => updateData(response.data))
@@ -29,14 +47,14 @@ const PostForm = () => {
         <div>
           <div className="InputContainer">
             <p>{'Date'}</p>
-            <input value={date} onChange={(event) => setDate(event.target.value)} />
+            <input value={car} onChange={(event) => setCar(event.target.value)} />
           </div>
           <div className="InputContainer">
             <p>{'Value'}</p>
-            <input value={value} onChange={(event) => setValue(event.target.value)} />
+            <input value={speed} onChange={(event) => setSpeed(event.target.value)} />
           </div>
         </div>
-        <BasicButton text={'Submit'} onClick={onClick} />
+        <BasicButton text={'Submit'} onClick={firstSubmit ? firstOnClick : secondOnClick} />
       </div>
     </div>
   );

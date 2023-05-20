@@ -5,7 +5,6 @@ const axios = require('axios');
 const { JSDOM } = require('jsdom');
 const xpath = require('xpath');
 
-
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
@@ -19,9 +18,9 @@ app.get('/server1/data', (req, res) => {
 
 app.post('/server1/data', (req, res) => {
   try {
-    const { date, value } = req.body;
+    const { marcaModel, vitezaMaxima } = req.body;
 
-    if (date === '' || value === '') throw new Error('Bad request');
+    if (marcaModel === '' || vitezaMaxima === '') throw new Error('Bad request');
 
     axios
       .post('http://localhost:4000/values', req.body)
@@ -34,14 +33,27 @@ app.post('/server1/data', (req, res) => {
   }
 });
 
-app.delete('/server1/data/:date', (req, res) => {
-  const { date } = req.params;
+app.post('/server1/initialData', (req, res) => {
+  const initialData = req.body;
+
+  const postRequests =  initialData.map((item) => {
+    axios
+      .post('http://localhost:4000/values', item)
+      .catch(() => res.status(500).json({ error: 'Failed to add data' }));
+  });
+
+  Promise.all(postRequests)
+    .then(() => res.json({ message: 'Data added successfully' }))
+});
+
+app.delete('/server1/data/:marcaModel', (req, res) => {
+  const { marcaModel } = req.params;
   axios
     .get('http://localhost:4000/values')
     .then((response) => {
-      const dataToDelete = response.data.filter((item) => item.date === date);
+      const dataToDelete = response.data.filter((item) => item.marcaModel === marcaModel);
 
-      if (dataToDelete.length === 0) throw new Error('Bad request');
+      if (dataToDelete.length < 1) throw new Error('Bad request');
 
       dataToDelete.map((item) => axios.delete(`http://localhost:4000/values/${item.id}`));
     })
@@ -56,37 +68,37 @@ app.delete('/server1/data/:date', (req, res) => {
 });
 
 app.get('/web-scraping/data', (req, res) => {
-  axios.get('https://ro.wikipedia.org/wiki/Lista_celor_mai_rapide_ma%C8%99ini_de_serie')
-  .then((response) => {
-    const { document } = new JSDOM(response.data).window;
-    const select = xpath.useNamespaces({ 'html': 'http://www.w3.org/1999/xhtml' });
+  axios
+    .get('https://ro.wikipedia.org/wiki/Lista_celor_mai_rapide_ma%C8%99ini_de_serie')
+    .then((response) => {
+      const { document } = new JSDOM(response.data).window;
+      const select = xpath.useNamespaces({ html: 'http://www.w3.org/1999/xhtml' });
 
-    const xpathExpression = "//html:table[1]/html:tbody/html:tr/html:td[position() = 2 or position() = 3]";
-    const nodes = select(xpathExpression, document);
+      const xpathExpression = '//html:table[1]/html:tbody/html:tr/html:td[position() = 2 or position() = 3]';
+      const nodes = select(xpathExpression, document);
 
-    const data = [];
-    let count = 0;
+      const data = [];
 
-    for (let i = 0; i < nodes.length; i += 2) {
-      const marcaModelNode = nodes[i];
-      const vitezaMaximaNode = nodes[i + 1];
-      const marcaModel = marcaModelNode.textContent.trim();
-      const vitezaMaxima = vitezaMaximaNode.textContent.split(' ')[0];
+      for (let i = 0; i < nodes.length; i += 2) {
+        const marcaModelNode = nodes[i];
+        const vitezaMaximaNode = nodes[i + 1];
+        const marcaModel = marcaModelNode.textContent.trim();
+        const vitezaMaxima = vitezaMaximaNode.textContent.split(' ')[0];
 
-      if (marcaModel && vitezaMaxima) {
-        data.push({ marcaModel, vitezaMaxima });
+        if (marcaModel && vitezaMaxima) {
+          data.push({ marcaModel, vitezaMaxima });
+        }
       }
-    }
 
-    const responseJson = {
-      data: data.slice(0, 3) // Redu tabelul la primele 3 elemente
-    };
-    
-    res.json(responseJson.data);
-  })
-  .catch((error) => {
-    res.status(500).send('Error deleting data');
-  });
+      const responseJson = {
+        data: data.slice(0, 3) 
+      };
+
+      res.json(responseJson.data);
+    })
+    .catch((error) => {
+      res.status(500).send('Error deleting data');
+    });
 });
 
 app.listen(8000, () => {

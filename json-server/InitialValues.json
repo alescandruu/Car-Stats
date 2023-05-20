@@ -2,28 +2,8 @@
   "values": [
     {
       "id": 1,
-      "date": "16 mai 2023",
-      "value": 5.5
-    },
-    {
-      "id": 2,
-      "date": "20 mai 2023",
-      "value": 5.5
-    },
-    {
-      "id": 3,
-      "date": "30 mai 2023",
-      "value": 5.5
-    },
-    {
-      "date": "18 mai",
-      "value": "5.2",
-      "id": 4
-    },
-    {
-      "date": "20 mai 2023",
-      "value": "142",
-      "id": 5
+      "marcaModel": "Bugatti",
+      "vitezaMaxima": "300 km/h"
     }
   ]
 }

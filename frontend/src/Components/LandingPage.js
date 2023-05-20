@@ -7,7 +7,7 @@ const LandingPage = () => {
   const { updateData } = useContext(Context);
 
     const onClick = () => {
-      axios.get('http://localhost:8000/server1/data')
+      axios.get('http://localhost:8000/web-scraping/data')
       .then(response => updateData(response.data))
       .catch(error => console.error(error));
     }

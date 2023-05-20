@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start-all-apps": "start cmd /k \"cd backend && npm start\" & start cmd /k \"cd frontend && npm start\" & start cmd /k \"cd json-server && npm start\""
+    "start-all-apps": "start cmd /k \"cd backend && npm start\" & start cmd /k \"cd frontend && npm start\" & start cmd /k \"cd json-server && npm start\"",
+    "install-all" : "start cmd /k \"cd backend && npm i\" & start cmd /k \"cd frontend && npm i\" & start cmd /k \"cd json-server && npm i\""
   },
   "keywords": [],
   "author": "",

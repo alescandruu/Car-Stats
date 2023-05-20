@@ -2,7 +2,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const axios = require('axios');
-const cheerio = require('cheerio');
+const { JSDOM } = require('jsdom');
+const xpath = require('xpath');
+
 
 const app = express();
 app.use(bodyParser.json());
@@ -54,30 +56,37 @@ app.delete('/server1/data/:date', (req, res) => {
 });
 
 app.get('/web-scraping/data', (req, res) => {
-  axios
-    .get('https://www.cursbnr.ro/curs-valutar-lira-sterlina')
-    .then((response) => {
-      const $ = cheerio.load(response.data);
-      const scrapedData = [];
+  axios.get('https://ro.wikipedia.org/wiki/Lista_celor_mai_rapide_ma%C8%99ini_de_serie')
+  .then((response) => {
+    const { document } = new JSDOM(response.data).window;
+    const select = xpath.useNamespaces({ 'html': 'http://www.w3.org/1999/xhtml' });
 
-      // XPath code
-      const xpath =
-        '/html/body/div[3]/div[1]/div/main/div[2]/div/div/div[3]/table/tbody/tr/td[position() <= 2][not(contains(@class, "text-right"))]';
+    const xpathExpression = "//html:table[1]/html:tbody/html:tr/html:td[position() = 2 or position() = 3]";
+    const nodes = select(xpathExpression, document);
 
-      const nodes = $x(xpath, { document: { documentElement: $._root } });
+    const data = [];
+    let count = 0;
 
-      for (const node of nodes) {
-        const date = $(node).find('td.date').text().trim();
-        const value = parseFloat($(node).find('td.value').text().trim());
-        scrapedData.push({ date, value });
+    for (let i = 0; i < nodes.length; i += 2) {
+      const marcaModelNode = nodes[i];
+      const vitezaMaximaNode = nodes[i + 1];
+      const marcaModel = marcaModelNode.textContent.trim();
+      const vitezaMaxima = vitezaMaximaNode.textContent.split(' ')[0];
+
+      if (marcaModel && vitezaMaxima) {
+        data.push({ marcaModel, vitezaMaxima });
       }
+    }
 
-      res.json(scrapedData);
-    })
-    .catch((error) => {
-      console.error(error);
-      res.status(500).json({ error: 'Failed to fetch scraped data' });
-    });
+    const responseJson = {
+      data: data.slice(0, 3) // Redu tabelul la primele 3 elemente
+    };
+    
+    res.json(responseJson.data);
+  })
+  .catch((error) => {
+    res.status(500).send('Error deleting data');
+  });
 });
 
 app.listen(8000, () => {

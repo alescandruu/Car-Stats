@@ -9,9 +9,9 @@ const Table = ({ data }) => {
           <p style={{ fontWeight: 'bold' }}>{'Date'}</p>
           <p style={{ fontWeight: 'bold' }}>{'Value'}</p>
         </div>
-        {data.map((element) => {
+        {data.map((element, index) => {
           return (
-            <div className="Row">
+            <div className="Row" key={index}>
               <p>{element.date}</p>
               <p>{element.value}</p>
             </div>

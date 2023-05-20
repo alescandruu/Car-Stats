@@ -8,53 +8,61 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-let data = [
-  { date: '16 mai 2023', value: 5.5 },
-  { date: '16 mai 2023', value: 5.5 },
-  { date: '16 mai 2023', value: 5.5 }
-];
-
 app.get('/server1/data', (req, res) => {
-  axios.get('http://localhost:4000/values')
-  .then(response => res.json(response.data))
-  .catch((error) => 
-    res.status(500).json({ error: 'Failed to get data' })
-  );
+  axios
+    .get('http://localhost:4000/values')
+    .then((response) => res.json(response.data))
+    .catch(() => res.status(500).json({ error: 'Failed to get data' }));
 });
 
 app.post('/server1/data', (req, res) => {
-  axios.post('http://localhost:4000/values', req.body)
-  .then(response => res.json(response.data))
-  .catch((error) => 
-    res.status(500).json({ error: 'Failed to add data' })
-  );
+  try {
+    const { date, value } = req.body;
+
+    if (date === '' || value === '') throw new Error('Bad request');
+
+    axios
+      .post('http://localhost:4000/values', req.body)
+      .then((response) => res.json(response.data))
+      .catch(() => res.status(500).json({ error: 'Failed to add data' }));
+  } catch (error) {
+    if (error.message === 'Bad request') {
+      res.status(400).send(error.message);
+    }
+  }
 });
 
 app.delete('/server1/data/:date', (req, res) => {
   const { date } = req.params;
-  axios.get('http://localhost:4000/values')
-  .then((response) => {
-    const dataToDelete = response.data.filter(item => item.date === date);
+  axios
+    .get('http://localhost:4000/values')
+    .then((response) => {
+      const dataToDelete = response.data.filter((item) => item.date === date);
 
-    dataToDelete.map(item =>
-      axios.delete(`http://localhost:4000/values/${item.id}`)
-    );
-  })
-  .then(() => res.json({ message: 'Data deleted successfully' }))
-  .catch ((error) => {
-    console.error(error);
-    res.status(500).send('Error deleting data');
-  })
+      if (dataToDelete.length === 0) throw new Error('Bad request');
+
+      dataToDelete.map((item) => axios.delete(`http://localhost:4000/values/${item.id}`));
+    })
+    .then(() => res.json({ message: 'Data deleted successfully' }))
+    .catch((error) => {
+      if (error.message === 'Bad request') {
+        res.status(400).send(`${error.message}`);
+        return;
+      }
+      res.status(500).send('Error deleting data');
+    });
 });
 
 app.get('/web-scraping/data', (req, res) => {
-  axios.get('https://www.cursbnr.ro/curs-valutar-lira-sterlina')
-    .then(response => {
+  axios
+    .get('https://www.cursbnr.ro/curs-valutar-lira-sterlina')
+    .then((response) => {
       const $ = cheerio.load(response.data);
       const scrapedData = [];
 
       // XPath code
-      const xpath = '/html/body/div[3]/div[1]/div/main/div[2]/div/div/div[3]/table/tbody/tr/td[position() <= 2][not(contains(@class, "text-right"))]';
+      const xpath =
+        '/html/body/div[3]/div[1]/div/main/div[2]/div/div/div[3]/table/tbody/tr/td[position() <= 2][not(contains(@class, "text-right"))]';
 
       const nodes = $x(xpath, { document: { documentElement: $._root } });
 
@@ -66,7 +74,7 @@ app.get('/web-scraping/data', (req, res) => {
 
       res.json(scrapedData);
     })
-    .catch(error => {
+    .catch((error) => {
       console.error(error);
       res.status(500).json({ error: 'Failed to fetch scraped data' });
     });
